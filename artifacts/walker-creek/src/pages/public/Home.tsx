@@ -29,7 +29,7 @@ export default function Home() {
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
             <h1 className="font-serif text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-              Walker Creek <br /> Farms & Cabins
+              Walker Creek Farms <br /> & Cabins
             </h1>
             <p className="text-lg md:text-2xl font-light max-w-2xl mx-auto mb-10 text-white/90">
               A secluded retreat nestled on 250+ acres of Appalachian wilderness in Nebo, West Virginia.
@@ -51,7 +51,7 @@ export default function Home() {
             Leave the noise behind. Our hand-built cabins and yurts offer a sanctuary where time slows down. 
             Surrounded by warm oak, creek stones, and firelight, experience the deep rest that only nature can provide. 
             Whether you're looking for a romantic getaway, a family adventure, or a solitary retreat, 
-            Walker Creek is your home in the woods.
+            Walker Creek Farms is your home in the woods.
           </p>
         </div>
       </section>

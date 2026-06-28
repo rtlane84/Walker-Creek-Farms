@@ -18,7 +18,7 @@ export default function Cabins() {
             Cabins & Yurts
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Choose from our hand-built cabins and unique yurts. Each offers a different way to experience the quiet beauty of Walker Creek.
+            Choose from our hand-built cabins and unique yurts. Each offers a different way to experience the quiet beauty of Walker Creek Farms.
           </p>
         </div>
 

@@ -53,7 +53,7 @@ export default function AdminLogin() {
     <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-muted/30 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="font-serif text-3xl font-bold text-foreground">Walker Creek Admin</h1>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Walker Creek Farms Admin</h1>
         </div>
         <Card className="border-border/50 shadow-lg">
           <CardHeader>

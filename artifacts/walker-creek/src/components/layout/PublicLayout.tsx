@@ -22,7 +22,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <Link href="/" className="font-serif text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            Walker Creek
+            Walker Creek Farms
           </Link>
 
           {/* Desktop Nav */}

@@ -156,7 +156,7 @@ export const WebhookHandler: RequestHandler = async (req, res): Promise<void> =>
           guestName: booking.guestName,
           guestEmail: booking.guestEmail,
           guestPhone: booking.guestPhone,
-          rentalName: rental?.name ?? "Walker Creek Property",
+          rentalName: rental?.name ?? "Walker Creek Farms Property",
           checkIn: booking.checkIn,
           checkOut: booking.checkOut,
           nights: calcNights(booking.checkIn, booking.checkOut),
