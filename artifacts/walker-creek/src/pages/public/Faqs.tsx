@@ -27,10 +27,14 @@ export default function Faqs() {
               <div key={i} className="animate-pulse bg-muted rounded-lg h-[60px]" />
             ))}
           </div>
+        ) : !Array.isArray(faqs) || faqs.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p>No FAQs available yet. Check back soon.</p>
+          </div>
         ) : (
           <div className="bg-card border rounded-2xl p-6 md:p-8 shadow-sm">
             <Accordion type="single" collapsible className="w-full">
-              {faqs?.map((faq) => (
+              {faqs.map((faq) => (
                 <AccordionItem key={faq.id} value={faq.id.toString()}>
                   <AccordionTrigger className="text-left font-serif text-lg hover:text-primary">
                     {faq.question}

@@ -7,8 +7,8 @@
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
-    "demo:db": "pnpm --filter @workspace/db run push && pnpm --filter @workspace/db run seed",
-    "demo:api": "DEMO_MODE=true pnpm --filter @workspace/api-server run dev",
+    "demo:db": "bash -c 'set -a; [ -f .env ] && . ./.env; set +a; pnpm --filter @workspace/db run push && pnpm --filter @workspace/db run seed'",
+    "demo:api": "bash -c 'set -a; [ -f .env ] && . ./.env; set +a; export DEMO_MODE=true PORT=${PORT:-8080}; pnpm --filter @workspace/api-server run dev'",
     "demo:web": "PORT=24478 BASE_PATH=/ pnpm --filter @workspace/walker-creek run dev",
     "build:netlify": "pnpm --filter @workspace/walker-creek run build"
   },

@@ -130,7 +130,7 @@ export default function CabinDetail() {
     if (!rental || !checkIn || !checkOut || !pricing) return;
     try {
       const booking = await createBooking.mutateAsync({
-        body: {
+        data: {
           rentalId: Number(id),
           guestName, guestEmail, guestPhone,
           checkIn, checkOut, guestCount,

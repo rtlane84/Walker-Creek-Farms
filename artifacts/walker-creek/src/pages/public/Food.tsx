@@ -5,13 +5,13 @@ import { formatCurrency } from "@/lib/format";
 export default function Food() {
   const { data: foodItems, isLoading } = useListFoodItems();
 
-  const groupedFood = foodItems?.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = [];
-    }
-    acc[item.category].push(item);
-    return acc;
-  }, {} as Record<string, typeof foodItems>);
+  const groupedFood = Array.isArray(foodItems)
+    ? foodItems.reduce((acc, item) => {
+        if (!acc[item.category]) acc[item.category] = [];
+        acc[item.category]!.push(item);
+        return acc;
+      }, {} as Record<string, NonNullable<typeof foodItems>>)
+    : undefined;
 
   return (
     <div className="flex flex-col w-full py-16 md:py-24 bg-muted/30 min-h-[calc(100vh-80px)]">
@@ -30,9 +30,13 @@ export default function Food() {
             <div className="animate-pulse bg-card rounded-xl h-[200px] shadow-sm" />
             <div className="animate-pulse bg-card rounded-xl h-[200px] shadow-sm" />
           </div>
+        ) : !groupedFood || Object.keys(groupedFood).length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p>No food items listed yet. Check back soon or ask about our catering partners when you book.</p>
+          </div>
         ) : (
           <div className="space-y-12">
-            {groupedFood && Object.entries(groupedFood).map(([category, items]) => (
+            {Object.entries(groupedFood).map(([category, items]) => (
               <div key={category}>
                 <h2 className="font-serif text-2xl font-bold mb-6 text-primary border-b pb-2">{category}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

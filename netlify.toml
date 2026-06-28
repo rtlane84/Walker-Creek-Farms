@@ -1,10 +1,13 @@
 [build]
-  command = "pnpm --filter @workspace/walker-creek run build"
+  command = "bash scripts/netlify-build.sh"
   publish = "artifacts/walker-creek/dist/public"
 
 [build.environment]
   NODE_VERSION = "20"
   PORT = "5173"
   BASE_PATH = "/"
-  # Install devDependencies (Vite lives there). Do NOT set NODE_ENV=production here.
   PNPM_FLAGS = "--no-frozen-lockfile --prod=false"
+
+# Set API_URL in Netlify → Site configuration → Environment variables
+# Example: https://walker-creek-api.onrender.com
+# The build script writes /api/* proxy rules into _redirects automatically.

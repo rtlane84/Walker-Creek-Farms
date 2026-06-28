@@ -25,9 +25,13 @@ export default function Blog() {
               <div key={i} className="animate-pulse bg-card rounded-xl h-[400px] shadow-sm" />
             ))}
           </div>
+        ) : !Array.isArray(posts) || posts.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p>No blog posts yet. Check back soon for stories from the farm.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {posts?.map((post) => (
+            {posts.map((post) => (
               <Card key={post.id} className="overflow-hidden group flex flex-col hover:shadow-lg transition-shadow border-border/50">
                 {post.coverImage && (
                   <div className="h-64 overflow-hidden relative">

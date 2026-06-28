@@ -28,9 +28,13 @@ export default function Cabins() {
               <div key={i} className="animate-pulse bg-card rounded-xl h-[450px] shadow-sm" />
             ))}
           </div>
+        ) : !Array.isArray(rentals) || rentals.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p>No cabins available at the moment. Please check back soon.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {rentals?.map((rental, index) => (
+            {rentals.map((rental, index) => (
               <motion.div
                 key={rental.id}
                 initial={{ opacity: 0, y: 20 }}

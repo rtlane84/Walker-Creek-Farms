@@ -21,6 +21,8 @@ export default function Dashboard() {
     );
   }
 
+  const recentBookings = Array.isArray(dashboard.recentBookings) ? dashboard.recentBookings : [];
+
   return (
     <div className="space-y-8">
       <div>
@@ -87,7 +89,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="[&_tr:last-child]:border-0">
-                {dashboard.recentBookings.map((booking) => (
+                {recentBookings.map((booking) => (
                   <tr key={booking.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                     <td className="p-4 align-middle font-medium">{booking.guestName}</td>
                     <td className="p-4 align-middle">{booking.rentalName || `Rental #${booking.rentalId}`}</td>
@@ -100,7 +102,7 @@ export default function Dashboard() {
                     <td className="p-4 align-middle text-right font-medium">{formatCurrency(booking.totalPrice)}</td>
                   </tr>
                 ))}
-                {dashboard.recentBookings.length === 0 && (
+                {recentBookings.length === 0 && (
                   <tr>
                     <td colSpan={5} className="p-4 text-center text-muted-foreground">No recent bookings.</td>
                   </tr>

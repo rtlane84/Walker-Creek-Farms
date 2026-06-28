@@ -11,6 +11,7 @@ import Home from "@/pages/public/Home";
 import Cabins from "@/pages/public/Cabins";
 import CabinDetail from "@/pages/public/CabinDetail";
 import BookingSuccess from "@/pages/public/BookingSuccess";
+import DemoCheckout from "@/pages/public/DemoCheckout";
 import Food from "@/pages/public/Food";
 import Faqs from "@/pages/public/Faqs";
 import GiftCertificates from "@/pages/public/GiftCertificates";
@@ -73,6 +74,7 @@ function Router() {
         <Route path="/cabins" component={Cabins} />
         <Route path="/cabins/:id" component={CabinDetail} />
         <Route path="/booking-success" component={BookingSuccess} />
+        <Route path="/demo-checkout" component={DemoCheckout} />
         <Route path="/food" component={Food} />
         <Route path="/faqs" component={Faqs} />
         <Route path="/gift-certificates" component={GiftCertificates} />

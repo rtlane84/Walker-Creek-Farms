@@ -1,0 +1,29 @@
+# Deploy the API to Render (free tier). After deploy, copy the service URL
+# (e.g. https://walker-creek-api.onrender.com) into Netlify as API_URL.
+#
+# Required Render env vars (set in dashboard):
+#   DATABASE_URL  — your Supabase connection string
+#   DEMO_MODE     — true
+#   SESSION_SECRET — any random string
+
+services:
+  - type: web
+    name: walker-creek-api
+    runtime: node
+    plan: free
+    buildCommand: >-
+      corepack enable &&
+      corepack prepare pnpm@9.15.9 --activate &&
+      pnpm install --prod=false &&
+      pnpm --filter @workspace/api-server run build
+    startCommand: node artifacts/api-server/dist/index.mjs
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DEMO_MODE
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true

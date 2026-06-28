@@ -1,13 +1,15 @@
 import { Router, type RequestHandler } from "express";
 import { eq } from "drizzle-orm";
 import { db, bookingsTable, rentalsTable, siteSettingsTable } from "@workspace/db";
-import { getStripeClient } from "../stripeClient";
+import { getStripeClient, isStripeConfigured } from "../stripeClient";
 import { sendGuestConfirmationEmail, sendOwnerNotificationEmail } from "../emailService";
 import type { BookingEmailData } from "../emailService";
+import { isDemoMode } from "../lib/demoMode";
 
 const router = Router();
 
 function getSiteUrl(req: any): string {
+  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, "");
   const domains = process.env.REPLIT_DOMAINS?.split(",")[0];
   if (domains) return `https://${domains}`;
   return `${req.protocol}://${req.get("host")}`;
@@ -71,6 +73,22 @@ router.post("/stripe/create-checkout", async (req, res): Promise<void> => {
 
   const nights = calcNights(booking.checkIn, booking.checkOut);
   const siteUrl = getSiteUrl(req);
+
+  if (isDemoMode() || !isStripeConfigured()) {
+    const demoSessionId = `demo_cs_${booking.id}_${Date.now()}`;
+    await db
+      .update(bookingsTable)
+      .set({ stripeCheckoutSessionId: demoSessionId, paymentMode })
+      .where(eq(bookingsTable.id, Number(bookingId)));
+
+    res.json({
+      url: `${siteUrl}/demo-checkout?booking_id=${booking.id}`,
+      sessionId: demoSessionId,
+      demo: true,
+    });
+    return;
+  }
+
   const stripe = getStripeClient();
 
   const session = await stripe.checkout.sessions.create({
@@ -106,7 +124,65 @@ router.post("/stripe/create-checkout", async (req, res): Promise<void> => {
   res.json({ url: session.url, sessionId: session.id });
 });
 
+router.post("/stripe/demo-complete", async (req, res): Promise<void> => {
+  const { bookingId } = req.body;
+  if (!bookingId) {
+    res.status(400).json({ error: "bookingId required" });
+    return;
+  }
+
+  const [booking] = await db
+    .update(bookingsTable)
+    .set({
+      status: "confirmed",
+      stripePaymentIntentId: `demo_pi_${bookingId}`,
+    })
+    .where(eq(bookingsTable.id, Number(bookingId)))
+    .returning();
+
+  if (!booking) {
+    res.status(404).json({ error: "Booking not found" });
+    return;
+  }
+
+  const [rental] = await db
+    .select({ name: rentalsTable.name })
+    .from(rentalsTable)
+    .where(eq(rentalsTable.id, booking.rentalId));
+
+  const emailData: BookingEmailData = {
+    bookingId: booking.id,
+    guestName: booking.guestName,
+    guestEmail: booking.guestEmail,
+    guestPhone: booking.guestPhone,
+    rentalName: rental?.name ?? "Walker Creek Farms Property",
+    checkIn: booking.checkIn,
+    checkOut: booking.checkOut,
+    nights: calcNights(booking.checkIn, booking.checkOut),
+    guestCount: booking.guestCount,
+    nightlyTotal: booking.nightlyTotal,
+    cleaningFee: booking.cleaningFee,
+    taxAmount: booking.taxAmount,
+    totalPrice: booking.totalPrice,
+    specialRequests: booking.specialRequests,
+    paymentMode: booking.paymentMode,
+    status: "confirmed",
+  };
+
+  await Promise.allSettled([
+    sendGuestConfirmationEmail(emailData),
+    sendOwnerNotificationEmail(emailData),
+  ]);
+
+  res.json({ success: true, bookingId: booking.id });
+});
+
 export const WebhookHandler: RequestHandler = async (req, res): Promise<void> => {
+  if (isDemoMode() || !isStripeConfigured()) {
+    res.json({ received: true, demo: true });
+    return;
+  }
+
   const stripe = getStripeClient();
   const sig = req.headers["stripe-signature"];
 
@@ -183,13 +259,10 @@ export const WebhookHandler: RequestHandler = async (req, res): Promise<void> =>
 
 router.get("/stripe/session-status", async (req, res): Promise<void> => {
   const { session_id, booking_id } = req.query as { session_id: string; booking_id: string };
-  if (!session_id || !booking_id) {
-    res.status(400).json({ error: "session_id and booking_id required" });
+  if (!booking_id) {
+    res.status(400).json({ error: "booking_id required" });
     return;
   }
-
-  const stripe = getStripeClient();
-  const session = await stripe.checkout.sessions.retrieve(session_id);
 
   const [booking] = await db
     .select({
@@ -216,6 +289,23 @@ router.get("/stripe/session-status", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Booking not found" });
     return;
   }
+
+  const isDemoSession = !session_id || session_id.startsWith("demo_cs_");
+
+  if (isDemoSession || isDemoMode() || !isStripeConfigured()) {
+    if (booking.status !== "confirmed") {
+      await db
+        .update(bookingsTable)
+        .set({ status: "confirmed", stripePaymentIntentId: `demo_pi_${booking_id}` })
+        .where(eq(bookingsTable.id, Number(booking_id)));
+      booking.status = "confirmed";
+    }
+    res.json({ paymentStatus: "paid", booking });
+    return;
+  }
+
+  const stripe = getStripeClient();
+  const session = await stripe.checkout.sessions.retrieve(session_id);
 
   if (session.payment_status === "paid" && booking.status !== "confirmed") {
     await db

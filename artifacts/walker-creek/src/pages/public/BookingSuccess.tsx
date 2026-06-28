@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, Link } from "wouter";
+import { Link } from "wouter";
 import { CheckCircle, Calendar, Users, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,19 +27,34 @@ function formatDate(d: string) {
 }
 
 export default function BookingSuccess() {
-  const [, params] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const sessionId = searchParams.get("session_id");
   const bookingId = searchParams.get("booking_id");
+  const mode = searchParams.get("mode");
 
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sessionId || !bookingId) {
+    if (!bookingId) {
       setError("Invalid confirmation link.");
       setLoading(false);
+      return;
+    }
+
+    const loadFromBooking = () =>
+      fetch(`/api/bookings/${bookingId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.error) setError(data.error);
+          else setBooking(data);
+        });
+
+    if (mode === "request" || mode === "demo" || !sessionId) {
+      loadFromBooking()
+        .catch(() => setError("Could not load booking details."))
+        .finally(() => setLoading(false));
       return;
     }
 
@@ -51,7 +66,7 @@ export default function BookingSuccess() {
       })
       .catch(() => setError("Could not load booking details."))
       .finally(() => setLoading(false));
-  }, [sessionId, bookingId]);
+  }, [sessionId, bookingId, mode]);
 
   if (loading) {
     return (
@@ -80,6 +95,8 @@ export default function BookingSuccess() {
       (1000 * 60 * 60 * 24)
   );
 
+  const isRequest = booking.paymentMode === "request" || mode === "request";
+
   return (
     <div className="min-h-screen bg-background py-16 px-4">
       <div className="max-w-2xl mx-auto">
@@ -88,10 +105,10 @@ export default function BookingSuccess() {
             <CheckCircle className="w-10 h-10 text-primary" />
           </div>
           <h1 className="font-serif text-4xl font-bold text-foreground mb-3">
-            {booking.paymentMode === "request" ? "Request Submitted!" : "Booking Confirmed!"}
+            {isRequest ? "Request Submitted!" : "Booking Confirmed!"}
           </h1>
           <p className="text-muted-foreground text-lg">
-            {booking.paymentMode === "request"
+            {isRequest
               ? "We'll review your request and get back to you within 24 hours."
               : "A confirmation email has been sent to you. We can't wait to welcome you!"}
           </p>
