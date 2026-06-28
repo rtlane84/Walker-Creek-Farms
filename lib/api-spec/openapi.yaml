@@ -3,20 +3,40 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Walker Creek Farms & Cabins API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: rentals
+    description: Rental cabin/yurt operations
+  - name: bookings
+    description: Booking operations
+  - name: blocked-dates
+    description: Blocked date management
+  - name: food
+    description: Food items
+  - name: faq
+    description: FAQ management
+  - name: gift-certificates
+    description: Gift certificate operations
+  - name: blog
+    description: Blog post operations
+  - name: contact
+    description: Contact messages
+  - name: admin
+    description: Admin dashboard operations
+  - name: availability
+    description: Availability queries
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +44,1127 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Rentals ──────────────────────────────────────────────────────────────────
+  /rentals:
+    get:
+      operationId: listRentals
+      tags: [rentals]
+      summary: List all rentals
+      responses:
+        "200":
+          description: List of rentals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Rental"
+    post:
+      operationId: createRental
+      tags: [rentals]
+      summary: Create a rental (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RentalInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rental"
+
+  /rentals/{id}:
+    get:
+      operationId: getRental
+      tags: [rentals]
+      summary: Get a rental by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rental
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rental"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateRental
+      tags: [rentals]
+      summary: Update a rental (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RentalUpdate"
+      responses:
+        "200":
+          description: Updated rental
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rental"
+    delete:
+      operationId: deleteRental
+      tags: [rentals]
+      summary: Delete a rental (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /rentals/{id}/photos:
+    get:
+      operationId: listRentalPhotos
+      tags: [rentals]
+      summary: List photos for a rental
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of photos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RentalPhoto"
+    post:
+      operationId: addRentalPhoto
+      tags: [rentals]
+      summary: Add a photo to a rental (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RentalPhotoInput"
+      responses:
+        "201":
+          description: Photo added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RentalPhoto"
+
+  /rental-photos/{id}:
+    delete:
+      operationId: deleteRentalPhoto
+      tags: [rentals]
+      summary: Delete a rental photo (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Availability ──────────────────────────────────────────────────────────────
+  /rentals/{id}/availability:
+    get:
+      operationId: getRentalAvailability
+      tags: [availability]
+      summary: Get unavailable dates for a rental
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unavailable dates list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailabilityResponse"
+
+  # ── Bookings ─────────────────────────────────────────────────────────────────
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List all bookings (admin)
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a booking request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "409":
+          description: Dates not available
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get a booking by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update a booking (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingUpdate"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    delete:
+      operationId: deleteBooking
+      tags: [bookings]
+      summary: Delete/cancel a booking (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /bookings/{id}/confirm:
+    post:
+      operationId: confirmBooking
+      tags: [bookings]
+      summary: Confirm a booking after payment (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingConfirmInput"
+      responses:
+        "200":
+          description: Confirmed booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  # ── Blocked Dates ─────────────────────────────────────────────────────────────
+  /blocked-dates:
+    get:
+      operationId: listBlockedDates
+      tags: [blocked-dates]
+      summary: List all blocked dates (admin)
+      responses:
+        "200":
+          description: List of blocked dates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BlockedDate"
+    post:
+      operationId: createBlockedDate
+      tags: [blocked-dates]
+      summary: Block a date range (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlockedDateInput"
+      responses:
+        "201":
+          description: Blocked date created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlockedDate"
+
+  /blocked-dates/{id}:
+    delete:
+      operationId: deleteBlockedDate
+      tags: [blocked-dates]
+      summary: Remove a blocked date (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Food Items ────────────────────────────────────────────────────────────────
+  /food-items:
+    get:
+      operationId: listFoodItems
+      tags: [food]
+      summary: List all food items
+      responses:
+        "200":
+          description: List of food items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FoodItem"
+    post:
+      operationId: createFoodItem
+      tags: [food]
+      summary: Create a food item (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FoodItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FoodItem"
+
+  /food-items/{id}:
+    patch:
+      operationId: updateFoodItem
+      tags: [food]
+      summary: Update a food item (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FoodItemUpdate"
+      responses:
+        "200":
+          description: Updated food item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FoodItem"
+    delete:
+      operationId: deleteFoodItem
+      tags: [food]
+      summary: Delete a food item (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── FAQ ───────────────────────────────────────────────────────────────────────
+  /faq-items:
+    get:
+      operationId: listFaqItems
+      tags: [faq]
+      summary: List all FAQ items
+      responses:
+        "200":
+          description: List of FAQ items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FaqItem"
+    post:
+      operationId: createFaqItem
+      tags: [faq]
+      summary: Create a FAQ item (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FaqItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FaqItem"
+
+  /faq-items/{id}:
+    patch:
+      operationId: updateFaqItem
+      tags: [faq]
+      summary: Update a FAQ item (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FaqItemUpdate"
+      responses:
+        "200":
+          description: Updated FAQ item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FaqItem"
+    delete:
+      operationId: deleteFaqItem
+      tags: [faq]
+      summary: Delete a FAQ item (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Gift Certificates ─────────────────────────────────────────────────────────
+  /gift-certificates:
+    get:
+      operationId: listGiftCertificates
+      tags: [gift-certificates]
+      summary: List all gift certificate options
+      responses:
+        "200":
+          description: List of gift certificates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GiftCertificate"
+    post:
+      operationId: createGiftCertificate
+      tags: [gift-certificates]
+      summary: Create a gift certificate option (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GiftCertificateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GiftCertificate"
+
+  /gift-certificates/{id}:
+    patch:
+      operationId: updateGiftCertificate
+      tags: [gift-certificates]
+      summary: Update a gift certificate (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GiftCertificateUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GiftCertificate"
+    delete:
+      operationId: deleteGiftCertificate
+      tags: [gift-certificates]
+      summary: Delete a gift certificate option (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Blog ──────────────────────────────────────────────────────────────────────
+  /blog-posts:
+    get:
+      operationId: listBlogPosts
+      tags: [blog]
+      summary: List all blog posts
+      parameters:
+        - name: published
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of blog posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BlogPost"
+    post:
+      operationId: createBlogPost
+      tags: [blog]
+      summary: Create a blog post (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlogPostInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+
+  /blog-posts/{id}:
+    get:
+      operationId: getBlogPost
+      tags: [blog]
+      summary: Get a blog post by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Blog post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBlogPost
+      tags: [blog]
+      summary: Update a blog post (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlogPostUpdate"
+      responses:
+        "200":
+          description: Updated blog post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+    delete:
+      operationId: deleteBlogPost
+      tags: [blog]
+      summary: Delete a blog post (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Contact ───────────────────────────────────────────────────────────────────
+  /contact-messages:
+    get:
+      operationId: listContactMessages
+      tags: [contact]
+      summary: List all contact messages (admin)
+      responses:
+        "200":
+          description: List of contact messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContactMessage"
+    post:
+      operationId: createContactMessage
+      tags: [contact]
+      summary: Submit a contact message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactMessageInput"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessage"
+
+  /contact-messages/{id}:
+    delete:
+      operationId: deleteContactMessage
+      tags: [contact]
+      summary: Delete a contact message (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Admin Dashboard ───────────────────────────────────────────────────────────
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      summary: Get admin dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /admin/upcoming-arrivals:
+    get:
+      operationId: getUpcomingArrivals
+      tags: [admin]
+      summary: Get upcoming arrivals in the next 30 days
+      responses:
+        "200":
+          description: Upcoming arrivals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
+  # ── Admin Auth ────────────────────────────────────────────────────────────────
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginResult"
+        "401":
+          description: Invalid credentials
+
+  /admin/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin]
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logged out
+
+  /admin/me:
+    get:
+      operationId: getAdminMe
+      tags: [admin]
+      summary: Get current admin session
+      responses:
+        "200":
+          description: Admin session info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "401":
+          description: Not authenticated
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ── Rental ──────────────────────────────────────────────────────────────────
+    Rental:
+      type: object
+      required: [id, name, type, description, guestCount, bedrooms, bathrooms, weekdayPrice, weekendPrice, cleaningFee, taxRate, isActive, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type: { type: string }
+        description: { type: string }
+        guestCount: { type: integer }
+        bedrooms: { type: integer }
+        bathrooms: { type: number }
+        weekdayPrice: { type: number }
+        weekendPrice: { type: number }
+        cleaningFee: { type: number }
+        taxRate: { type: number }
+        amenities: { type: ["string", "null"] }
+        coverPhoto: { type: ["string", "null"] }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+        createdAt: { type: string }
+
+    RentalInput:
+      type: object
+      required: [name, type, description, guestCount, bedrooms, bathrooms, weekdayPrice, weekendPrice]
+      properties:
+        name: { type: string }
+        type: { type: string }
+        description: { type: string }
+        guestCount: { type: integer }
+        bedrooms: { type: integer }
+        bathrooms: { type: number }
+        weekdayPrice: { type: number }
+        weekendPrice: { type: number }
+        cleaningFee: { type: number }
+        taxRate: { type: number }
+        amenities: { type: string }
+        coverPhoto: { type: string }
+        sortOrder: { type: integer }
+
+    RentalUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        type: { type: string }
+        description: { type: string }
+        guestCount: { type: integer }
+        bedrooms: { type: integer }
+        bathrooms: { type: number }
+        weekdayPrice: { type: number }
+        weekendPrice: { type: number }
+        cleaningFee: { type: number }
+        taxRate: { type: number }
+        amenities: { type: string }
+        coverPhoto: { type: string }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+
+    RentalPhoto:
+      type: object
+      required: [id, rentalId, url, caption, sortOrder]
+      properties:
+        id: { type: integer }
+        rentalId: { type: integer }
+        url: { type: string }
+        caption: { type: ["string", "null"] }
+        sortOrder: { type: integer }
+
+    RentalPhotoInput:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
+        caption: { type: string }
+        sortOrder: { type: integer }
+
+    AvailabilityResponse:
+      type: object
+      required: [rentalId, unavailableDates]
+      properties:
+        rentalId: { type: integer }
+        unavailableDates: { type: array, items: { type: string } }
+
+    # ── Booking ──────────────────────────────────────────────────────────────────
+    Booking:
+      type: object
+      required: [id, rentalId, guestName, guestEmail, guestPhone, checkIn, checkOut, guestCount, status, totalPrice, createdAt]
+      properties:
+        id: { type: integer }
+        rentalId: { type: integer }
+        rentalName: { type: ["string", "null"] }
+        guestName: { type: string }
+        guestEmail: { type: string }
+        guestPhone: { type: string }
+        checkIn: { type: string }
+        checkOut: { type: string }
+        guestCount: { type: integer }
+        status: { type: string }
+        totalPrice: { type: number }
+        cleaningFee: { type: number }
+        taxAmount: { type: number }
+        specialRequests: { type: ["string", "null"] }
+        stripePaymentIntentId: { type: ["string", "null"] }
+        isAdminCreated: { type: boolean }
+        createdAt: { type: string }
+
+    BookingInput:
+      type: object
+      required: [rentalId, guestName, guestEmail, guestPhone, checkIn, checkOut, guestCount]
+      properties:
+        rentalId: { type: integer }
+        guestName: { type: string }
+        guestEmail: { type: string }
+        guestPhone: { type: string }
+        checkIn: { type: string }
+        checkOut: { type: string }
+        guestCount: { type: integer }
+        specialRequests: { type: string }
+        isAdminCreated: { type: boolean }
+
+    BookingUpdate:
+      type: object
+      properties:
+        status: { type: string }
+        specialRequests: { type: string }
+        stripePaymentIntentId: { type: string }
+        guestName: { type: string }
+        guestEmail: { type: string }
+        guestPhone: { type: string }
+        checkIn: { type: string }
+        checkOut: { type: string }
+        guestCount: { type: integer }
+
+    BookingConfirmInput:
+      type: object
+      required: [paymentIntentId]
+      properties:
+        paymentIntentId: { type: string }
+
+    # ── Blocked Dates ─────────────────────────────────────────────────────────────
+    BlockedDate:
+      type: object
+      required: [id, rentalId, startDate, endDate, reason]
+      properties:
+        id: { type: integer }
+        rentalId: { type: integer }
+        startDate: { type: string }
+        endDate: { type: string }
+        reason: { type: ["string", "null"] }
+
+    BlockedDateInput:
+      type: object
+      required: [rentalId, startDate, endDate]
+      properties:
+        rentalId: { type: integer }
+        startDate: { type: string }
+        endDate: { type: string }
+        reason: { type: string }
+
+    # ── Food ─────────────────────────────────────────────────────────────────────
+    FoodItem:
+      type: object
+      required: [id, category, name, description, price, servingSize, isAvailable, sortOrder]
+      properties:
+        id: { type: integer }
+        category: { type: string }
+        name: { type: string }
+        description: { type: string }
+        price: { type: number }
+        servingSize: { type: ["string", "null"] }
+        isAvailable: { type: boolean }
+        sortOrder: { type: integer }
+
+    FoodItemInput:
+      type: object
+      required: [category, name, description, price]
+      properties:
+        category: { type: string }
+        name: { type: string }
+        description: { type: string }
+        price: { type: number }
+        servingSize: { type: string }
+        sortOrder: { type: integer }
+
+    FoodItemUpdate:
+      type: object
+      properties:
+        category: { type: string }
+        name: { type: string }
+        description: { type: string }
+        price: { type: number }
+        servingSize: { type: string }
+        isAvailable: { type: boolean }
+        sortOrder: { type: integer }
+
+    # ── FAQ ───────────────────────────────────────────────────────────────────────
+    FaqItem:
+      type: object
+      required: [id, question, answer, sortOrder]
+      properties:
+        id: { type: integer }
+        question: { type: string }
+        answer: { type: string }
+        sortOrder: { type: integer }
+
+    FaqItemInput:
+      type: object
+      required: [question, answer]
+      properties:
+        question: { type: string }
+        answer: { type: string }
+        sortOrder: { type: integer }
+
+    FaqItemUpdate:
+      type: object
+      properties:
+        question: { type: string }
+        answer: { type: string }
+        sortOrder: { type: integer }
+
+    # ── Gift Certificates ─────────────────────────────────────────────────────────
+    GiftCertificate:
+      type: object
+      required: [id, name, description, amount, isActive]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        amount: { type: number }
+        stripeProductId: { type: ["string", "null"] }
+        isActive: { type: boolean }
+
+    GiftCertificateInput:
+      type: object
+      required: [name, description, amount]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        amount: { type: number }
+
+    GiftCertificateUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        amount: { type: number }
+        stripeProductId: { type: string }
+        isActive: { type: boolean }
+
+    # ── Blog ──────────────────────────────────────────────────────────────────────
+    BlogPost:
+      type: object
+      required: [id, title, slug, excerpt, content, coverImage, isPublished, publishedAt, createdAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        slug: { type: string }
+        excerpt: { type: string }
+        content: { type: string }
+        coverImage: { type: ["string", "null"] }
+        isPublished: { type: boolean }
+        publishedAt: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    BlogPostInput:
+      type: object
+      required: [title, slug, excerpt, content]
+      properties:
+        title: { type: string }
+        slug: { type: string }
+        excerpt: { type: string }
+        content: { type: string }
+        coverImage: { type: string }
+        isPublished: { type: boolean }
+
+    BlogPostUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        slug: { type: string }
+        excerpt: { type: string }
+        content: { type: string }
+        coverImage: { type: string }
+        isPublished: { type: boolean }
+
+    # ── Contact ───────────────────────────────────────────────────────────────────
+    ContactMessage:
+      type: object
+      required: [id, name, email, subject, message, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        subject: { type: ["string", "null"] }
+        message: { type: string }
+        phone: { type: ["string", "null"] }
+        isRead: { type: boolean }
+        createdAt: { type: string }
+
+    ContactMessageInput:
+      type: object
+      required: [name, email, message]
+      properties:
+        name: { type: string }
+        email: { type: string }
+        subject: { type: string }
+        message: { type: string }
+        phone: { type: string }
+
+    # ── Admin ──────────────────────────────────────────────────────────────────────
+    DashboardSummary:
+      type: object
+      required: [totalBookings, upcomingBookings, totalRevenue, activeRentals, pendingBookings, recentBookings]
+      properties:
+        totalBookings: { type: integer }
+        upcomingBookings: { type: integer }
+        totalRevenue: { type: number }
+        activeRentals: { type: integer }
+        pendingBookings: { type: integer }
+        recentBookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+
+    AdminLoginInput:
+      type: object
+      required: [password]
+      properties:
+        password: { type: string }
+
+    AdminLoginResult:
+      type: object
+      required: [success, message]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+
+    AdminSession:
+      type: object
+      required: [isAdmin]
+      properties:
+        isAdmin: { type: boolean }

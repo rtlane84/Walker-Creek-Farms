@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Walker Creek Farms & Cabins"
+version = "1.0.0"
+id = "artifacts/walker-creek"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24478
+
+[services.development]
+run = "pnpm --filter @workspace/walker-creek run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/walker-creek", "run", "build" ]
+publicDir = "artifacts/walker-creek/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24478"
+BASE_PATH = "/"

@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "11oXHsYatTzJdG_8CR1s5"
+uri = "file://artifacts/walker-creek/public/assets/hero-cabin.png"
+type = "image"
+title = "Appalachian cabin nature photography"
+
+[[generated]]
+id = "R5UOyPN0pOHnM526xmEha"
+uri = "file://artifacts/walker-creek/public/assets/cabin-interior.png"
+type = "image"
+title = "Cozy cabin interior"

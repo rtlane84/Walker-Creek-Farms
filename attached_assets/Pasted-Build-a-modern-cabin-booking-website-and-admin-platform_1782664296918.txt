@@ -1,0 +1,124 @@
+Build a modern cabin booking website and admin platform for “Walker Creek Farms & Cabins.”
+
+Goal:
+Replace the current Smoobu booking setup with our own platform. The current website has a rustic wood/cabin theme, cream content cards, dark brown accents, nature/cabin photos, and simple navigation. Keep that warm rustic Appalachian cabin feel, but modernize it so it feels professional, mobile-friendly, clean, and trustworthy.
+
+Tech stack:
+- Next.js or React/Vite
+- TypeScript
+- Tailwind CSS
+- Supabase for database/auth/storage
+- Stripe for payments
+- Resend or SMTP for email notifications
+- Deployable to Vercel or Netlify
+- Include a good README with setup steps
+
+Public website pages:
+1. Home
+   - Hero section with cabin/nature imagery
+   - “Walker Creek Farms & Cabins”
+   - Rustic but modern design
+   - Short intro about secluded cabins/yurts in West Virginia
+   - Featured cabins
+   - Book Now CTA
+
+2. Cabins / Yurts
+   - List of rentals with photos, description, amenities, guest count, bedrooms, bathrooms, nightly price
+   - Each rental has its own detail page
+   - Photo gallery
+   - Availability calendar
+   - Book Now button
+
+3. Food
+   - Menu/information page
+   - Keep ability to list partner food options, prices, order instructions, and contact info
+
+4. FAQs
+   - Location
+   - Booking/cancellation policy
+   - What is provided
+   - Vehicle access
+   - TV/Wi-Fi
+   - Hot tubs/fire pits/etc.
+
+5. Gift Certificates
+   - Explain how gift certificates work
+   - Allow purchase through Stripe
+   - Admin can create/edit gift certificate options
+
+6. Contact / Booking
+   - Contact info
+   - Embedded booking CTA
+   - Contact form
+
+7. Blog
+   - Simple blog list and post pages
+   - Admin can create/edit/delete posts
+
+Booking system:
+- Users choose rental, dates, guest count, and submit booking
+- Show unavailable dates clearly
+- Prevent double booking
+- Pricing by night
+- Weekend/weekday pricing support
+- Cleaning fee/taxes optional
+- Stripe checkout for payment
+- Booking confirmation email to guest
+- New booking notification email to owner
+- Admin can manually add bookings for phone bookings
+- Admin can block dates manually
+- Admin can cancel/refund-mark bookings
+
+Admin dashboard:
+- Secure login
+- Manage rentals
+- Manage photos
+- Manage amenities
+- Manage rates
+- Manage bookings
+- Manage blocked dates
+- Manage food page content
+- Manage FAQ content
+- Manage gift certificates
+- Manage blog posts
+- View upcoming arrivals and recent bookings
+
+Design direction:
+- Rustic modern cabin theme
+- Use cream/off-white backgrounds, dark brown text/buttons, forest green accents, warm wood tones
+- Do NOT use the old full-screen repeating wood background everywhere
+- Make it feel like a modern hospitality website, but still rustic
+- Large beautiful photos
+- Clean cards
+- Mobile-first responsive layout
+- Professional navigation
+- Sticky “Book Now” CTA on mobile
+
+Seed data:
+Create sample rentals:
+- Box Elder Cabin
+- Birch Yurt Bungalow
+- Willow Yurt Bungalow
+- Add realistic placeholder descriptions, prices, amenities, and photos
+
+Database:
+Create schema for:
+- users/admins
+- rentals
+- rental_photos
+- amenities
+- bookings
+- blocked_dates
+- rates
+- faq_items
+- food_items
+- gift_certificates
+- blog_posts
+- contact_messages
+
+Important:
+- Make this a real working MVP, not just a mockup.
+- Booking availability must actually check the database.
+- Admin changes should update the public site.
+- Include clear comments where I need to add real Supabase, Stripe, and email keys.
+- Make it easy to test locally.
