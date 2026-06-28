@@ -11,31 +11,46 @@ import {
   ConfirmBookingParams,
   ConfirmBookingBody,
 } from "@workspace/api-zod";
+import { getPaymentMode } from "./stripe";
+import { sendGuestConfirmationEmail, sendOwnerNotificationEmail } from "../emailService";
 
 const router = Router();
+
+const BOOKING_SELECT = {
+  id: bookingsTable.id,
+  rentalId: bookingsTable.rentalId,
+  rentalName: rentalsTable.name,
+  guestName: bookingsTable.guestName,
+  guestEmail: bookingsTable.guestEmail,
+  guestPhone: bookingsTable.guestPhone,
+  checkIn: bookingsTable.checkIn,
+  checkOut: bookingsTable.checkOut,
+  guestCount: bookingsTable.guestCount,
+  status: bookingsTable.status,
+  totalPrice: bookingsTable.totalPrice,
+  nightlyTotal: bookingsTable.nightlyTotal,
+  cleaningFee: bookingsTable.cleaningFee,
+  taxAmount: bookingsTable.taxAmount,
+  specialRequests: bookingsTable.specialRequests,
+  stripePaymentIntentId: bookingsTable.stripePaymentIntentId,
+  stripeCheckoutSessionId: bookingsTable.stripeCheckoutSessionId,
+  paymentMode: bookingsTable.paymentMode,
+  isAdminCreated: bookingsTable.isAdminCreated,
+  refundNote: bookingsTable.refundNote,
+  createdAt: bookingsTable.createdAt,
+};
+
+function calcNights(checkIn: string, checkOut: string) {
+  return Math.ceil(
+    (new Date(checkOut + "T00:00:00Z").getTime() - new Date(checkIn + "T00:00:00Z").getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+}
 
 router.get("/bookings", async (req, res): Promise<void> => {
   const query = ListBookingsQueryParams.safeParse(req.query);
   const bookings = await db
-    .select({
-      id: bookingsTable.id,
-      rentalId: bookingsTable.rentalId,
-      rentalName: rentalsTable.name,
-      guestName: bookingsTable.guestName,
-      guestEmail: bookingsTable.guestEmail,
-      guestPhone: bookingsTable.guestPhone,
-      checkIn: bookingsTable.checkIn,
-      checkOut: bookingsTable.checkOut,
-      guestCount: bookingsTable.guestCount,
-      status: bookingsTable.status,
-      totalPrice: bookingsTable.totalPrice,
-      cleaningFee: bookingsTable.cleaningFee,
-      taxAmount: bookingsTable.taxAmount,
-      specialRequests: bookingsTable.specialRequests,
-      stripePaymentIntentId: bookingsTable.stripePaymentIntentId,
-      isAdminCreated: bookingsTable.isAdminCreated,
-      createdAt: bookingsTable.createdAt,
-    })
+    .select(BOOKING_SELECT)
     .from(bookingsTable)
     .leftJoin(rentalsTable, eq(bookingsTable.rentalId, rentalsTable.id))
     .orderBy(desc(bookingsTable.createdAt));
@@ -80,121 +95,112 @@ router.post("/bookings", async (req, res): Promise<void> => {
     return;
   }
 
-  const nights = Math.ceil(
-    (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const nightlyPrice = rental.weekdayPrice;
-  const subtotal = nights * nightlyPrice;
+  const nights = calcNights(checkIn, checkOut);
+
+  const checkInDate = new Date(checkIn + "T12:00:00Z");
+  let nightlyTotal = 0;
+  for (let i = 0; i < nights; i++) {
+    const d = new Date(checkInDate);
+    d.setUTCDate(d.getUTCDate() + i);
+    const dow = d.getUTCDay();
+    nightlyTotal += dow === 0 || dow === 5 || dow === 6 ? rental.weekendPrice : rental.weekdayPrice;
+  }
+
   const cleaningFee = rental.cleaningFee;
-  const taxAmount = (subtotal + cleaningFee) * (rental.taxRate / 100);
-  const totalPrice = subtotal + cleaningFee + taxAmount;
+  const taxAmount = (nightlyTotal + cleaningFee) * (rental.taxRate / 100);
+  const totalPrice = nightlyTotal + cleaningFee + taxAmount;
+
+  const paymentMode = parsed.data.isAdminCreated ? "manual" : await getPaymentMode();
+  const status = parsed.data.isAdminCreated ? "confirmed" : paymentMode === "request" ? "pending" : "pending";
 
   const [booking] = await db
     .insert(bookingsTable)
     .values({
       ...parsed.data,
+      nightlyTotal,
       totalPrice,
       cleaningFee,
       taxAmount,
-      status: parsed.data.isAdminCreated ? "confirmed" : "pending",
+      paymentMode,
+      status,
     })
     .returning();
 
   const bookingWithName = { ...booking, rentalName: rental.name };
+
+  if (parsed.data.isAdminCreated || paymentMode === "request") {
+    const emailData = {
+      bookingId: booking.id,
+      guestName: booking.guestName,
+      guestEmail: booking.guestEmail,
+      guestPhone: booking.guestPhone,
+      rentalName: rental.name,
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      nights,
+      guestCount: booking.guestCount,
+      nightlyTotal: booking.nightlyTotal,
+      cleaningFee: booking.cleaningFee,
+      taxAmount: booking.taxAmount,
+      totalPrice: booking.totalPrice,
+      specialRequests: booking.specialRequests,
+      paymentMode: booking.paymentMode,
+      status: booking.status,
+    };
+    await Promise.allSettled([
+      sendGuestConfirmationEmail(emailData),
+      sendOwnerNotificationEmail(emailData),
+    ]);
+  }
+
   res.status(201).json(bookingWithName);
 });
 
 router.get("/bookings/:id", async (req, res): Promise<void> => {
   const params = GetBookingParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const [booking] = await db
-    .select({
-      id: bookingsTable.id,
-      rentalId: bookingsTable.rentalId,
-      rentalName: rentalsTable.name,
-      guestName: bookingsTable.guestName,
-      guestEmail: bookingsTable.guestEmail,
-      guestPhone: bookingsTable.guestPhone,
-      checkIn: bookingsTable.checkIn,
-      checkOut: bookingsTable.checkOut,
-      guestCount: bookingsTable.guestCount,
-      status: bookingsTable.status,
-      totalPrice: bookingsTable.totalPrice,
-      cleaningFee: bookingsTable.cleaningFee,
-      taxAmount: bookingsTable.taxAmount,
-      specialRequests: bookingsTable.specialRequests,
-      stripePaymentIntentId: bookingsTable.stripePaymentIntentId,
-      isAdminCreated: bookingsTable.isAdminCreated,
-      createdAt: bookingsTable.createdAt,
-    })
+    .select(BOOKING_SELECT)
     .from(bookingsTable)
     .leftJoin(rentalsTable, eq(bookingsTable.rentalId, rentalsTable.id))
     .where(eq(bookingsTable.id, params.data.id));
-
-  if (!booking) {
-    res.status(404).json({ error: "Booking not found" });
-    return;
-  }
+  if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
   res.json(booking);
 });
 
 router.patch("/bookings/:id", async (req, res): Promise<void> => {
   const params = UpdateBookingParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = UpdateBookingBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [booking] = await db
     .update(bookingsTable)
     .set(parsed.data)
     .where(eq(bookingsTable.id, params.data.id))
     .returning();
-  if (!booking) {
-    res.status(404).json({ error: "Booking not found" });
-    return;
-  }
+  if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
   const [rental] = await db.select({ name: rentalsTable.name }).from(rentalsTable).where(eq(rentalsTable.id, booking.rentalId));
   res.json({ ...booking, rentalName: rental?.name ?? null });
 });
 
 router.delete("/bookings/:id", async (req, res): Promise<void> => {
   const params = DeleteBookingParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   await db.update(bookingsTable).set({ status: "cancelled" }).where(eq(bookingsTable.id, params.data.id));
   res.sendStatus(204);
 });
 
 router.post("/bookings/:id/confirm", async (req, res): Promise<void> => {
   const params = ConfirmBookingParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = ConfirmBookingBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [booking] = await db
     .update(bookingsTable)
     .set({ status: "confirmed", stripePaymentIntentId: parsed.data.paymentIntentId })
     .where(eq(bookingsTable.id, params.data.id))
     .returning();
-  if (!booking) {
-    res.status(404).json({ error: "Booking not found" });
-    return;
-  }
+  if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
   const [rental] = await db.select({ name: rentalsTable.name }).from(rentalsTable).where(eq(rentalsTable.id, booking.rentalId));
   res.json({ ...booking, rentalName: rental?.name ?? null });
 });

@@ -9,6 +9,7 @@ import giftCertificatesRouter from "./gift-certificates";
 import blogRouter from "./blog";
 import contactRouter from "./contact";
 import adminRouter from "./admin";
+import stripeRouter from "./stripe";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(giftCertificatesRouter);
 router.use(blogRouter);
 router.use(contactRouter);
 router.use(adminRouter);
+router.use(stripeRouter);
 
 export default router;

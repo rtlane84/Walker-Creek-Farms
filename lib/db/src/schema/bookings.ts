@@ -14,11 +14,15 @@ export const bookingsTable = pgTable("bookings", {
   guestCount: integer("guest_count").notNull().default(1),
   status: text("status").notNull().default("pending"),
   totalPrice: doublePrecision("total_price").notNull().default(0),
+  nightlyTotal: doublePrecision("nightly_total").notNull().default(0),
   cleaningFee: doublePrecision("cleaning_fee").notNull().default(0),
   taxAmount: doublePrecision("tax_amount").notNull().default(0),
   specialRequests: text("special_requests"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+  paymentMode: text("payment_mode").notNull().default("full"),
   isAdminCreated: boolean("is_admin_created").notNull().default(false),
+  refundNote: text("refund_note"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

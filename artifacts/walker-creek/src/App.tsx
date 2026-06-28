@@ -10,6 +10,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import Home from "@/pages/public/Home";
 import Cabins from "@/pages/public/Cabins";
 import CabinDetail from "@/pages/public/CabinDetail";
+import BookingSuccess from "@/pages/public/BookingSuccess";
 import Food from "@/pages/public/Food";
 import Faqs from "@/pages/public/Faqs";
 import GiftCertificates from "@/pages/public/GiftCertificates";
@@ -27,6 +28,7 @@ import AdminBlog from "@/pages/admin/Blog";
 import AdminGiftCertificates from "@/pages/admin/GiftCertificates";
 import AdminContact from "@/pages/admin/Contact";
 import AdminBlockedDates from "@/pages/admin/BlockedDates";
+import AdminSettings from "@/pages/admin/Settings";
 
 const queryClient = new QueryClient();
 
@@ -36,12 +38,12 @@ function Router() {
 
   if (isAdmin) {
     if (location === "/admin/login") {
-       return (
-         <Switch>
-           <Route path="/admin/login" component={AdminLogin} />
-           <Route component={NotFound} />
-         </Switch>
-       )
+      return (
+        <Switch>
+          <Route path="/admin/login" component={AdminLogin} />
+          <Route component={NotFound} />
+        </Switch>
+      );
     }
 
     return (
@@ -57,6 +59,7 @@ function Router() {
           <Route path="/admin/gift-certificates" component={AdminGiftCertificates} />
           <Route path="/admin/contact" component={AdminContact} />
           <Route path="/admin/blocked-dates" component={AdminBlockedDates} />
+          <Route path="/admin/settings" component={AdminSettings} />
           <Route component={NotFound} />
         </Switch>
       </AdminLayout>
@@ -69,6 +72,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/cabins" component={Cabins} />
         <Route path="/cabins/:id" component={CabinDetail} />
+        <Route path="/booking-success" component={BookingSuccess} />
         <Route path="/food" component={Food} />
         <Route path="/faqs" component={Faqs} />
         <Route path="/gift-certificates" component={GiftCertificates} />
