@@ -1,4 +1,4 @@
-import { useAdminLogin } from "@workspace/api-client-react";
+import { useAdminLogin, getGetAdminMeQueryKey } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
@@ -17,6 +18,7 @@ export default function AdminLogin() {
   const login = useAdminLogin();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -27,8 +29,9 @@ export default function AdminLogin() {
     login.mutate(
       { data: { password: data.password } },
       {
-        onSuccess: (res) => {
+        onSuccess: async (res) => {
           if (res.success) {
+            await queryClient.invalidateQueries({ queryKey: getGetAdminMeQueryKey() });
             setLocation("/admin/dashboard");
           } else {
             toast({

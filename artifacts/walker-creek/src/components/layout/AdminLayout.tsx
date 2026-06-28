@@ -19,7 +19,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
-  const { data: admin, isLoading, error } = useGetAdminMe();
+  const { data: admin, isLoading, error } = useGetAdminMe({
+    query: { retry: false, refetchOnWindowFocus: true },
+  });
   const logout = useAdminLogout();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
