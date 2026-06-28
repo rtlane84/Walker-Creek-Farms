@@ -128,6 +128,7 @@ export interface BookingUpdate {
   checkIn?: string;
   checkOut?: string;
   guestCount?: number;
+  refundNote?: string;
 }
 
 export interface BookingConfirmInput {
@@ -275,6 +276,10 @@ export interface ContactMessageInput {
   subject?: string;
   message: string;
   phone?: string;
+}
+
+export interface ContactMessageUpdate {
+  isRead?: boolean;
 }
 
 export interface DashboardSummary {

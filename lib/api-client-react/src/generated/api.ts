@@ -35,6 +35,7 @@ import type {
   BookingUpdate,
   ContactMessage,
   ContactMessageInput,
+  ContactMessageUpdate,
   DashboardSummary,
   FaqItem,
   FaqItemInput,
@@ -2860,6 +2861,77 @@ export const useCreateContactMessage = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateContactMessageMutationOptions(options));
+    }
+
+export const getUpdateContactMessageUrl = (id: number,) => {
+
+
+
+
+  return `/api/contact-messages/${id}`
+}
+
+/**
+ * @summary Update a contact message (admin)
+ */
+export const updateContactMessage = async (id: number,
+    contactMessageUpdate: ContactMessageUpdate, options?: RequestInit): Promise<ContactMessage> => {
+
+  return customFetch<ContactMessage>(getUpdateContactMessageUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(contactMessageUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateContactMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateContactMessage>>, TError,{id: number;data: BodyType<ContactMessageUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateContactMessage>>, TError,{id: number;data: BodyType<ContactMessageUpdate>}, TContext> => {
+
+const mutationKey = ['updateContactMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateContactMessage>>, {id: number;data: BodyType<ContactMessageUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateContactMessage(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateContactMessageMutationResult = NonNullable<Awaited<ReturnType<typeof updateContactMessage>>>
+    export type UpdateContactMessageMutationBody = BodyType<ContactMessageUpdate>
+    export type UpdateContactMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a contact message (admin)
+ */
+export const useUpdateContactMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateContactMessage>>, TError,{id: number;data: BodyType<ContactMessageUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateContactMessage>>,
+        TError,
+        {id: number;data: BodyType<ContactMessageUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateContactMessageMutationOptions(options));
     }
 
 export const getDeleteContactMessageUrl = (id: number,) => {

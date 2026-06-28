@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { Trash2, CheckCircle, XCircle, Plus, RefreshCw, Phone } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, RefreshCw, Phone } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { getMutationErrorMessage } from "@/lib/admin-api";
 
 const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   confirmed: "default",
@@ -46,17 +47,20 @@ export default function Bookings() {
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
+  const rentalsList = Array.isArray(rentals) ? rentals : [];
 
   const handleCancel = (id: number) => {
     if (!confirm("Cancel this booking? Dates will be freed up.")) return;
     deleteBooking.mutate({ id }, {
       onSuccess: () => { invalidate(); toast({ title: "Booking cancelled" }); },
+      onError: (err) => toast({ title: "Cancel failed", description: getMutationErrorMessage(err), variant: "destructive" }),
     });
   };
 
   const handleConfirm = (id: number) => {
     updateBooking.mutate({ id, data: { status: "confirmed" } }, {
       onSuccess: () => { invalidate(); toast({ title: "Booking confirmed" }); },
+      onError: (err) => toast({ title: "Confirm failed", description: getMutationErrorMessage(err), variant: "destructive" }),
     });
   };
 
@@ -74,6 +78,7 @@ export default function Bookings() {
         toast({ title: "Refund noted", description: "Booking cancelled with refund note." });
         setRefundOpen(false);
       },
+      onError: (err) => toast({ title: "Update failed", description: getMutationErrorMessage(err), variant: "destructive" }),
     });
   };
 
@@ -84,7 +89,7 @@ export default function Bookings() {
     }
     try {
       await createBooking.mutateAsync({
-        body: {
+        data: {
           rentalId: Number(form.rentalId),
           guestName: form.guestName,
           guestEmail: form.guestEmail,
@@ -100,12 +105,12 @@ export default function Bookings() {
       toast({ title: "Phone booking added" });
       setAddOpen(false);
       setForm({ rentalId: "", guestName: "", guestEmail: "", guestPhone: "", checkIn: "", checkOut: "", guestCount: "2", specialRequests: "" });
-    } catch (err: any) {
-      toast({ title: "Failed to add booking", description: err.message, variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Failed to add booking", description: getMutationErrorMessage(err), variant: "destructive" });
     }
   };
 
-  const filtered = bookings?.filter((b) => statusFilter === "all" || b.status === statusFilter) ?? [];
+  const filtered = (Array.isArray(bookings) ? bookings : []).filter((b) => statusFilter === "all" || b.status === statusFilter);
 
   return (
     <div className="space-y-6">
@@ -235,7 +240,7 @@ export default function Bookings() {
               <Select value={form.rentalId} onValueChange={(v) => setForm({ ...form, rentalId: v })}>
                 <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
                 <SelectContent>
-                  {rentals?.map((r) => <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>)}
+                  {rentalsList.map((r) => <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

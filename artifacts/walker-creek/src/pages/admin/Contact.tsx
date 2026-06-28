@@ -1,4 +1,4 @@
-import { useListContactMessages, useDeleteContactMessage, getListContactMessagesQueryKey } from "@workspace/api-client-react";
+import { useListContactMessages, useUpdateContactMessage, useDeleteContactMessage, getListContactMessagesQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
@@ -6,26 +6,47 @@ import { Trash2, MailOpen } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { getMutationErrorMessage } from "@/lib/admin-api";
 
 export default function AdminContact() {
   const { data: messages, isLoading } = useListContactMessages();
+  const updateMessage = useUpdateContactMessage();
   const deleteMessage = useDeleteContactMessage();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this message?")) {
-      deleteMessage.mutate(
-        { id },
-        {
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: getListContactMessagesQueryKey() });
-            toast({ title: "Message deleted" });
-          },
-        }
-      );
-    }
+  const handleMarkRead = (id: number) => {
+    updateMessage.mutate(
+      { id, data: { isRead: true } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListContactMessagesQueryKey() });
+          toast({ title: "Marked as read" });
+        },
+        onError: (err) => {
+          toast({ title: "Update failed", description: getMutationErrorMessage(err), variant: "destructive" });
+        },
+      },
+    );
   };
+
+  const handleDelete = (id: number) => {
+    if (!confirm("Are you sure you want to delete this message?")) return;
+    deleteMessage.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListContactMessagesQueryKey() });
+          toast({ title: "Message deleted" });
+        },
+        onError: (err) => {
+          toast({ title: "Delete failed", description: getMutationErrorMessage(err), variant: "destructive" });
+        },
+      },
+    );
+  };
+
+  const list = Array.isArray(messages) ? messages : [];
 
   return (
     <div className="space-y-6">
@@ -49,7 +70,7 @@ export default function AdminContact() {
               <tbody className="[&_tr:last-child]:border-0">
                 {isLoading ? (
                   <tr><td colSpan={5} className="p-4 text-center">Loading...</td></tr>
-                ) : messages?.map((msg) => (
+                ) : list.map((msg) => (
                   <tr key={msg.id} className="border-b transition-colors hover:bg-muted/50">
                     <td className="p-4 align-middle">
                       <div className="font-medium">{msg.name}</div>
@@ -64,7 +85,7 @@ export default function AdminContact() {
                     </td>
                     <td className="p-4 align-middle text-right">
                       {!msg.isRead && (
-                        <Button variant="ghost" size="icon" title="Mark as Read">
+                        <Button variant="ghost" size="icon" title="Mark as Read" onClick={() => handleMarkRead(msg.id)}>
                           <MailOpen className="w-4 h-4" />
                         </Button>
                       )}

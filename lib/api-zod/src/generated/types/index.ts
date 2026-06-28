@@ -21,6 +21,7 @@ export * from './bookingInput';
 export * from './bookingUpdate';
 export * from './contactMessage';
 export * from './contactMessageInput';
+export * from './contactMessageUpdate';
 export * from './dashboardSummary';
 export * from './faqItem';
 export * from './faqItemInput';

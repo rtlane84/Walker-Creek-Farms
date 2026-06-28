@@ -16,4 +16,5 @@ export interface BookingUpdate {
   checkIn?: string;
   checkOut?: string;
   guestCount?: number;
+  refundNote?: string;
 }

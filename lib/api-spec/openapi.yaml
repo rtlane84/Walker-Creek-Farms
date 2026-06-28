@@ -728,6 +728,29 @@ paths:
                 $ref: "#/components/schemas/ContactMessage"
 
   /contact-messages/{id}:
+    patch:
+      operationId: updateContactMessage
+      tags: [contact]
+      summary: Update a contact message (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactMessageUpdate"
+      responses:
+        "200":
+          description: Updated message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessage"
     delete:
       operationId: deleteContactMessage
       tags: [contact]
@@ -958,6 +981,7 @@ components:
         checkIn: { type: string }
         checkOut: { type: string }
         guestCount: { type: integer }
+        refundNote: { type: string }
 
     BookingConfirmInput:
       type: object
@@ -1134,6 +1158,11 @@ components:
         subject: { type: string }
         message: { type: string }
         phone: { type: string }
+
+    ContactMessageUpdate:
+      type: object
+      properties:
+        isRead: { type: boolean }
 
     # ── Admin ──────────────────────────────────────────────────────────────────────
     DashboardSummary:

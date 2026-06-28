@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/format";
 export default function Home() {
   const { data: rentals, isLoading } = useListRentals();
 
-  const featuredRentals = rentals?.slice(0, 3) || [];
+  const featuredRentals = Array.isArray(rentals) ? rentals.slice(0, 3) : [];
 
   return (
     <div className="flex flex-col w-full">

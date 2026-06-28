@@ -331,7 +331,8 @@ export const UpdateBookingBody = zod.object({
   "guestPhone": zod.string().optional(),
   "checkIn": zod.string().optional(),
   "checkOut": zod.string().optional(),
-  "guestCount": zod.number().optional()
+  "guestCount": zod.number().optional(),
+  "refundNote": zod.string().optional()
 })
 
 export const UpdateBookingResponse = zod.object({
@@ -779,6 +780,29 @@ export const CreateContactMessageBody = zod.object({
 })
 
 export const CreateContactMessageResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "subject": zod.string().nullable(),
+  "message": zod.string(),
+  "phone": zod.string().nullish(),
+  "isRead": zod.boolean().optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a contact message (admin)
+ */
+export const UpdateContactMessageParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateContactMessageBody = zod.object({
+  "isRead": zod.boolean().optional()
+})
+
+export const UpdateContactMessageResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "email": zod.string(),
