@@ -1,13 +1,11 @@
 [build]
   # Netlify auto-runs pnpm install when pnpm-lock.yaml is present.
-  # Build only the frontend workspace package.
   command = "pnpm --filter @workspace/walker-creek run build"
   publish = "artifacts/walker-creek/dist/public"
 
 [build.environment]
-  NODE_VERSION = "20"
-  NODE_ENV = "production"
+  # pnpm 11.x requires Node.js >= 22.13 (uses node:sqlite)
+  NODE_VERSION = "22"
   PORT = "5173"
   BASE_PATH = "/"
-  # Allow install when lockfile changes between commits (CI defaults to frozen).
   PNPM_FLAGS = "--no-frozen-lockfile"
